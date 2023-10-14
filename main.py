@@ -1,8 +1,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import os
-import zipfile
 import io
 import base64
 import time
@@ -20,27 +18,24 @@ def split_csv(input_file, output_prefix, chunk_size=200):
         total_rows = len(df)
         num_files = total_rows // chunk_size + 1
 
-        zip_buffer = io.BytesIO()  # Create an in-memory zip file
+        output_files = {}  # Dictionary to store output files
 
-        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            for i in range(num_files):
-                start_idx = i * chunk_size
-                end_idx = (i + 1) * chunk_size
-                chunk_df = df[start_idx:end_idx]
+        for i in range(num_files):
+            start_idx = i * chunk_size
+            end_idx = (i + 1) * chunk_size
+            chunk_df = df[start_idx:end_idx]
 
-                output_file_name = f"{output_prefix}_{i + 1}.csv"
-                csv_data = chunk_df.to_csv(index=False, encoding='utf-8')
-
-                # Add the CSV data as a file to the zip
-                zipf.writestr(output_file_name, csv_data)
+            output_file_name = f"{output_prefix}_{i + 1}.csv"
+            output_files[output_file_name] = chunk_df.to_csv(index=False)
 
         st.success("CSV split successfully!")
 
-        # Provide a download link for the ZIP file
+        # Provide a download button for each split file
         st.subheader("Download Split Files")
-        zip_data = zip_buffer.getvalue()
-        b64 = base64.b64encode(zip_data).decode()
-        st.markdown(f"Download: [ZIP File]({b64})")
+        for output_file_name, output_file_data in output_files.items():
+            b64 = base64.b64encode(output_file_data.encode()).decode()
+            href = f'<a href="data:file/csv;base64,{b64}" download="{output_file_name}">Download {output_file_name}</a>'
+            st.markdown(href, unsafe_allow_html=True)
 
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
@@ -66,5 +61,5 @@ if main_csv_file is not None:
 st.sidebar.title("About")
 st.sidebar.info(
     "This is a Python app for splitting a large CSV file into smaller chunks. "
-    "Upload your CSV file, specify the output prefix, and chunk size, then click the 'Split CSV' button. The output files are stored in a ZIP file and can be downloaded without being physically saved."
+    "Upload your CSV file, specify the output prefix, and chunk size, then click the 'Split CSV' button. The split files can be downloaded individually."
 )
