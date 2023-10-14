@@ -4,10 +4,12 @@ import numpy as np
 import os
 import shutil
 import zipfile
+import time
 
 np.bool_ = bool  # Correct the assignment
 
 def split_csv(input_file, output_prefix, chunk_size=200):
+    output_directory = None
     try:
         # Create a unique output directory based on the timestamp
         timestamp = int(time.time())
