@@ -53,9 +53,13 @@ def split_csv(input_file, output_prefix, chunk_size=200):
         st.error(f"An error occurred: {str(e)}")
 
     finally:
+        
         # Cleanup: Remove the output directory and ZIP file after processing
-        shutil.rmtree(output_directory, ignore_errors=True)
-        os.remove(zip_filename)
+        if os.path.exists(output_directory):
+            shutil.rmtree(output_directory, ignore_errors=True)
+        if os.path.exists(zip_filename):
+            os.remove(zip_filename)
+
 
 st.set_page_config(
     page_title="CSV Splitter App",
