@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import os
 import shutil
-import time
+import zipfile
 
 np.bool_ = bool  # Correct the assignment
 
@@ -36,20 +36,26 @@ def split_csv(input_file, output_prefix, chunk_size=200):
             output_file = os.path.join(output_directory, output_file_name)
             chunk_df.to_csv(output_file, index=False)
 
+        # Create a ZIP archive containing the split files
+        zip_filename = f"{output_prefix}_split_files.zip"
+        with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for file_name in output_files:
+                file_path = os.path.join(output_directory, file_name)
+                zipf.write(file_path, os.path.basename(file_path))
+
         st.success("CSV split successfully!")
 
-        # Display download links for generated files
+        # Provide a download link for the ZIP file
         st.subheader("Download Split Files")
-        for output_file_name in output_files:
-            file_path = os.path.join(output_directory, output_file_name)
-            st.markdown(f"Download: [Split File ({output_file_name})]({file_path})")
+        st.markdown(f"Download: [ZIP File]({zip_filename})")
 
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
 
     finally:
-        # Cleanup: Remove the output directory after processing
+        # Cleanup: Remove the output directory and ZIP file after processing
         shutil.rmtree(output_directory, ignore_errors=True)
+        os.remove(zip_filename)
 
 st.set_page_config(
     page_title="CSV Splitter App",
